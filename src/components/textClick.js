@@ -47,6 +47,7 @@ class zTextClickMode extends HTMLElement {
         this.$canvas.width = this.$canvas.offsetWidth
         this.$canvas.height = this.$canvas.offsetHeight
         this.canvasContext = this.$canvas.getContext("2d");
+        this.lastPointRender = true
         this.$canvas.addEventListener('click', (event) => {
             // 获取事件目标的实际DOM节点
             const target = event.composedPath()[0];
@@ -55,57 +56,45 @@ class zTextClickMode extends HTMLElement {
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
 
-            const len = this.pointArrs.length
-            console.log(len)
-            if (len > 98) this.pointArrs.length = 0;
+            const len = this.pointArrs.value.length
 
-            this.pointArrs.push({
-                x, y,
-                index: this.pointArrs.length + 1
-            })
+            if (len > 98) this.pointArrs.value = [];
+
+            // 判断点是否重合
+            const isCoincide = this.checkPointIsCoincide(this.pointArrs.value, x, y)
+            if (isCoincide) {
+                this.lastPointRender = false
+                this.pointArrs.value = this.pointArrs.value.filter(v => v.index < isCoincide.index)
+            } else {
+                this.lastPointRender = true
+                this.pointArrs.value = [...this.pointArrs.value, {
+                    x, y,
+                    index: this.pointArrs.value.length + 1
+                }]
+            }
         }, false)
     }
 
-    drawPointToCanvas() {
-        // 判断点是否重合
-        console.log(this.pointArrs)
-        const isCoincide = this.checkPointIsCoincide()
-        const len = this.pointArrs.length
-        console.log('isCoincide', isCoincide)
-        // console.log(this.pointArrs)
-        if (isCoincide) {
-            const saveP = this.pointArrs.filter(v => v.index < isCoincide.index)
-            this.pointArrs.length = 0
-            this.pointArrs.push(...saveP)
-
-            // this.pointArrs.splice(isCoincide.index - 1, 999)
-            return
-        }
+    drawPointToCanvas(pointArr) {
+        this.canvasContext.clearRect(0, 0, this.$canvas.width, this.$canvas.height)
+        const len = pointArr.length
         if (len) {
-            const {x, y, index} = this.pointArrs[len - 1]
+            for (let i = 0; i < len; i++) {
+                const lastRender = i === len - 1 && this.lastPointRender
+                this.drawPoint({x: pointArr[i].x, y: pointArr[i].y}, lastRender)
 
-            this.drawPoint({x, y})
+                this.drawText({x: pointArr[i].x, y: pointArr[i].y, index: pointArr[i].index}, lastRender)
 
-            this.canvasContext.fillStyle = "#FFFFFF";
-            this.canvasContext.font = "16px sans-serif"
-            if (index > 9) {
-                this.canvasContext.fillText(index, x - 10, y + 6)
-            } else {
-                this.canvasContext.fillText(index, x - 4, y + 6)
             }
-        } else {
-            this.canvasContext.clearRect(0, 0, this.$canvas.width, this.$canvas.height)
         }
-
     }
 
-    checkPointIsCoincide() {
-        const len = this.pointArrs.length
-        if ([0, 1].includes(len)) return false
-        const {x, y} = this.pointArrs[len - 1]
-        for (let i = 0; i < len - 1; i++) {
-            if (this.isPointInsideCircle(this.pointArrs[i].x, this.pointArrs[i].y, 18, x, y)) {
-                return this.pointArrs[i]
+    checkPointIsCoincide(pointArr, x, y) {
+        const len = pointArr.length
+        if ([0].includes(len)) return false
+        for (let i = 0; i < len; i++) {
+            if (this.isPointInsideCircle(pointArr[i].x, pointArr[i].y, 18, x, y)) {
+                return pointArr[i]
             }
         }
         return false
@@ -118,20 +107,52 @@ class zTextClickMode extends HTMLElement {
         return distance <= r;
     }
 
-    drawPoint({x, y}) {
+    drawPoint({x, y}, lastRender) {
         this.canvasContext.beginPath();
 
-        this.canvasContext.shadowBlur = 10;
-        this.canvasContext.shadowColor = "rgba(0,0,0)";
-        this.canvasContext.arc(x, y, 18, 0, 2 * Math.PI);
+        if (lastRender) {
+            let transparent = 0
+            let renderPointTimer = setInterval(() => {
+                // this.canvasContext.shadowBlur = transparent;
+                // this.canvasContext.shadowColor = `rgba(0,0,0,${transparent / 10})`;
+                this.canvasContext.arc(x, y, 18, 0, 2 * Math.PI);
+                this.canvasContext.fillStyle = `rgba(255,255,255,${transparent / 10})`;
+                this.canvasContext.fill();
+                this.canvasContext.beginPath();
+                this.canvasContext.shadowBlur = 0;
+                this.canvasContext.shadowColor = "rgba(0,0,0,0)";
+                this.canvasContext.arc(x, y, 15, 0, 2 * Math.PI);
+                this.canvasContext.fillStyle = `rgba(83,159,254,${transparent / 10})`;
+                this.canvasContext.fill();
+                transparent++
+                if (transparent === 11) {
+                    clearInterval(renderPointTimer)
+                    renderPointTimer = null
+                }
+            }, 30)
+        } else {
+            this.canvasContext.shadowBlur = 10;
+            this.canvasContext.shadowColor = "rgba(0,0,0)";
+            this.canvasContext.arc(x, y, 18, 0, 2 * Math.PI);
+            this.canvasContext.fillStyle = "#FFFFFF";
+            this.canvasContext.fill();
+            this.canvasContext.beginPath();
+            this.canvasContext.shadowBlur = 0;
+            this.canvasContext.shadowColor = "rgba(0,0,0,0)";
+            this.canvasContext.arc(x, y, 15, 0, 2 * Math.PI);
+            this.canvasContext.fillStyle = "#539FFE";
+            this.canvasContext.fill();
+        }
+    }
+
+    drawText({x, y, index}, lastRender) {
         this.canvasContext.fillStyle = "#FFFFFF";
-        this.canvasContext.fill();
-        this.canvasContext.beginPath();
-        this.canvasContext.shadowBlur = 0;
-        this.canvasContext.shadowColor = "rgba(0,0,0,0)";
-        this.canvasContext.arc(x, y, 15, 0, 2 * Math.PI);
-        this.canvasContext.fillStyle = "#539FFE";
-        this.canvasContext.fill();
+        this.canvasContext.font = "16px sans-serif"
+        if (index > 9) {
+            this.canvasContext.fillText(index, x - 10, y + 6)
+        } else {
+            this.canvasContext.fillText(index, x - 4, y + 6)
+        }
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
@@ -143,7 +164,7 @@ class zTextClickMode extends HTMLElement {
         switch (name) {
             case 'data':
                 console.log(JSON.parse(newVal))
-                this.pointArrs.length = 0;
+                this.pointArrs.value = [];
                 break
         }
     }
@@ -162,18 +183,16 @@ class zTextClickMode extends HTMLElement {
 
     proxyModeData() {
         const _this = this
-        this.pointArrs = new Proxy([], {
+        this.pointArrs = new Proxy({
+            value: []
+        }, {
             set(target, p, newValue, receiver) {
-                target[p] = newValue;
-                if (p === "length" && newValue === 0) {
-                    target.splice(0, target.length); // 清空数组
-                    _this.drawPointToCanvas()
+                Reflect.set(...arguments);
+                if (['value'].includes(p)) {
+                    _this.drawPointToCanvas(newValue)
+                    _this.points = newValue
                 }
-                _this.points = target
-                if (!['length'].includes(p)) {
-                    _this.drawPointToCanvas()
-                }
-                return true;
+                return true
             }
         })
     }
