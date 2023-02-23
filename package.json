@@ -1,0 +1,21 @@
+{
+  "name": "robot-calibration",
+  "version": "1.0.0",
+  "description": "一个行为校验的组件",
+  "main": "/dist/bundle.js",
+  "dependencies": {
+    "webpack": "^5.75.0"
+  },
+  "devDependencies": {
+    "webpack-cli": "^5.0.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://47.109.17.168:10086/zx/checkVerificationWeb.git"
+  },
+  "author": "zx",
+  "license": "ISC"
+}
