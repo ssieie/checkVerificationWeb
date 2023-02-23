@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
+<head>
+    <meta charset="UTF-8"/>
     <title>Title</title>
-  </head>
-  <body>
-    <z-robot-calibration trigger="block"></z-robot-calibration>
+</head>
+<body>
+<z-robot-calibration mode="text"
+                     trigger="block"></z-robot-calibration>
 
-    <script type="module" src="./components/index.js"></script>
-    <!--<script src="../dist/bundle.js"></script>-->
-  </body>
+<script type="module" src="./components/index.js"></script>
+<!--<script src="../dist/bundle.js"></script>-->
+</body>
 
-  <script>
+<script>
     document
-      .querySelector("z-robot-calibration")
-      .addEventListener("onClick", (value) => console.log(value),false);
-  </script>
+        .querySelector("z-robot-calibration")
+        .addEventListener("onClick", (value) => console.log(value), false);
+</script>
 </html>

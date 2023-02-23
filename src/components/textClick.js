@@ -47,7 +47,6 @@ class zTextClickMode extends HTMLElement {
         this.$canvas.width = this.$canvas.offsetWidth
         this.$canvas.height = this.$canvas.offsetHeight
         this.canvasContext = this.$canvas.getContext("2d");
-        this.lastPointRender = true
         this.$canvas.addEventListener('click', (event) => {
             // 获取事件目标的实际DOM节点
             const target = event.composedPath()[0];
@@ -63,10 +62,8 @@ class zTextClickMode extends HTMLElement {
             // 判断点是否重合
             const isCoincide = this.checkPointIsCoincide(this.pointArrs.value, x, y)
             if (isCoincide) {
-                this.lastPointRender = false
                 this.pointArrs.value = this.pointArrs.value.filter(v => v.index < isCoincide.index)
             } else {
-                this.lastPointRender = true
                 this.pointArrs.value = [...this.pointArrs.value, {
                     x, y,
                     index: this.pointArrs.value.length + 1
@@ -80,10 +77,9 @@ class zTextClickMode extends HTMLElement {
         const len = pointArr.length
         if (len) {
             for (let i = 0; i < len; i++) {
-                const lastRender = i === len - 1 && this.lastPointRender
-                this.drawPoint({x: pointArr[i].x, y: pointArr[i].y}, lastRender)
+                this.drawPoint({x: pointArr[i].x, y: pointArr[i].y})
 
-                this.drawText({x: pointArr[i].x, y: pointArr[i].y, index: pointArr[i].index}, lastRender)
+                this.drawText({x: pointArr[i].x, y: pointArr[i].y, index: pointArr[i].index})
 
             }
         }
@@ -107,45 +103,23 @@ class zTextClickMode extends HTMLElement {
         return distance <= r;
     }
 
-    drawPoint({x, y}, lastRender) {
+    drawPoint({x, y}) {
         this.canvasContext.beginPath();
 
-        if (lastRender) {
-            let transparent = 0
-            let renderPointTimer = setInterval(() => {
-                // this.canvasContext.shadowBlur = transparent;
-                // this.canvasContext.shadowColor = `rgba(0,0,0,${transparent / 10})`;
-                this.canvasContext.arc(x, y, 18, 0, 2 * Math.PI);
-                this.canvasContext.fillStyle = `rgba(255,255,255,${transparent / 10})`;
-                this.canvasContext.fill();
-                this.canvasContext.beginPath();
-                this.canvasContext.shadowBlur = 0;
-                this.canvasContext.shadowColor = "rgba(0,0,0,0)";
-                this.canvasContext.arc(x, y, 15, 0, 2 * Math.PI);
-                this.canvasContext.fillStyle = `rgba(83,159,254,${transparent / 10})`;
-                this.canvasContext.fill();
-                transparent++
-                if (transparent === 11) {
-                    clearInterval(renderPointTimer)
-                    renderPointTimer = null
-                }
-            }, 30)
-        } else {
-            this.canvasContext.shadowBlur = 10;
-            this.canvasContext.shadowColor = "rgba(0,0,0)";
-            this.canvasContext.arc(x, y, 18, 0, 2 * Math.PI);
-            this.canvasContext.fillStyle = "#FFFFFF";
-            this.canvasContext.fill();
-            this.canvasContext.beginPath();
-            this.canvasContext.shadowBlur = 0;
-            this.canvasContext.shadowColor = "rgba(0,0,0,0)";
-            this.canvasContext.arc(x, y, 15, 0, 2 * Math.PI);
-            this.canvasContext.fillStyle = "#539FFE";
-            this.canvasContext.fill();
-        }
+        this.canvasContext.shadowBlur = 10;
+        this.canvasContext.shadowColor = "rgba(0,0,0)";
+        this.canvasContext.arc(x, y, 18, 0, 2 * Math.PI);
+        this.canvasContext.fillStyle = "#FFFFFF";
+        this.canvasContext.fill();
+        this.canvasContext.beginPath();
+        this.canvasContext.shadowBlur = 0;
+        this.canvasContext.shadowColor = "rgba(0,0,0,0)";
+        this.canvasContext.arc(x, y, 15, 0, 2 * Math.PI);
+        this.canvasContext.fillStyle = "#539FFE";
+        this.canvasContext.fill();
     }
 
-    drawText({x, y, index}, lastRender) {
+    drawText({x, y, index}) {
         this.canvasContext.fillStyle = "#FFFFFF";
         this.canvasContext.font = "16px sans-serif"
         if (index > 9) {

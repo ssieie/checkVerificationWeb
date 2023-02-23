@@ -115,6 +115,7 @@ export const loadTemp = () => {
     /*.container .verifying span:nth-child(7){animation-delay: 2.0s;}*/
     /*.container .verifying span:nth-child(8){animation-delay: 2.3s;}*/
     
+   
     .mode-wrapper-append-to-container{
         position: absolute;
         left: 0;
@@ -252,6 +253,37 @@ export const loadTemp = () => {
     transform: translate(-50%,-50%);
     }
     
+    .mode-wrapper-append-to-container .loading-mask{
+        position:absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        width: 80px;
+        height: 40px;
+        z-index: -99999;
+        opacity: 0;
+        transition: all .3s;
+    }
+    .mode-wrapper-append-to-container .loading-mask span{
+        display: inline-block;
+        width: 8px;
+        height: 100%;
+        border-radius: 4px;
+        background: lightgreen;
+        -webkit-animation: loading 1.04s ease infinite;
+    }
+    .mode-wrapper-append-to-container .loading-mask span:nth-child(2){
+        -webkit-animation-delay:0.13s;
+    }
+    .mode-wrapper-append-to-container .loading-mask span:nth-child(3){
+        -webkit-animation-delay:0.26s;
+    }
+    .mode-wrapper-append-to-container .loading-mask span:nth-child(4){
+        -webkit-animation-delay:0.39s;
+    }
+    .mode-wrapper-append-to-container .loading-mask span:nth-child(5){
+        -webkit-animation-delay:0.52s;
+    }
     
     .mode-wrapper-append-to-body{
         position: absolute;
@@ -335,6 +367,28 @@ export const loadTemp = () => {
         50% {transform: translateY(-0.3rem);}
         100% {transform: translateY(0);}
     }
+    @-webkit-keyframes loading{
+        0%,100%{
+            height: 40px;
+            background: lightgreen;
+        }
+        50%{
+            height: 60px;
+            margin-top: -20px;
+            background: lightblue;
+        }
+    }
+    @keyframes loading{
+        0%,100%{
+            height: 40px;
+            background: lightgreen;
+        }
+        50%{
+            height: 60px;
+            margin-top: -20px;
+            background: lightblue;
+        }
+    }
     </style>
 
     <div class="container">
@@ -372,6 +426,13 @@ export const loadTemp = () => {
         </div>
         <span class="pos-arrow-b"></span>
         <span class="pos-arrow-t"></span>
+        <div class="loading-mask">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
     </div>
     <div class="mode-wrapper-append-to-body">
         <div class="mode-slot"></div>

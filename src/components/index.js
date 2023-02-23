@@ -1,7 +1,7 @@
 import {loadTemp} from "./temp/temp.js";
 import zTextClickMode from "./textClick.js";
 import zSlideMode from "./slide.js";
-import zRotateMode from "./rotate";
+import zRotateMode from "./rotate.js";
 
 class zRobotCalibration extends HTMLElement {
 
@@ -46,6 +46,7 @@ class zRobotCalibration extends HTMLElement {
 
         this.$blockMode = this._shadowRoot.querySelector('.mode-wrapper-append-to-container')
         this.$blockModeChild = {
+            loadingMask: this._shadowRoot.querySelector('.mode-wrapper-append-to-container>.loading-mask'),
             arrowT: this._shadowRoot.querySelector('.mode-wrapper-append-to-container>.pos-arrow-t'),
             arrowB: this._shadowRoot.querySelector('.mode-wrapper-append-to-container>.pos-arrow-b')
         }
@@ -61,6 +62,15 @@ class zRobotCalibration extends HTMLElement {
                 this.blockModeController().computedPos()
                 this.blockModeController().show()
                 this.createMode()
+
+                if (this.modeData[this.mode]) {
+                    this.modeData[this.mode] = this.modeData[this.mode]
+                } else {
+                    this.networkFunc().getData().then(({type, data}) => {
+                        this.modeData[type] = data
+                    })
+                }
+
             } else {
                 this.blockModeController().hide()
             }
@@ -286,6 +296,14 @@ class zRobotCalibration extends HTMLElement {
     }
 
     connectedCallback() {
+        let uuid = window.localStorage.getItem('Z_UUID')
+        if (uuid) {
+            this.Z_UUID = uuid
+        } else {
+            this.Z_UUID = this.toolFunc().uniqueKey()
+            window.localStorage.setItem('Z_UUID', this.Z_UUID)
+        }
+
         if (['passive'].includes(this.trigger)) {
             this.$container.style.display = 'none';
         } else {
@@ -298,6 +316,7 @@ class zRobotCalibration extends HTMLElement {
             this.networkFunc().getData().then(({type, data}) => {
                 this.modeData[type] = data
             })
+            this.modeIsOpen = true
         }
     }
 
@@ -311,7 +330,7 @@ class zRobotCalibration extends HTMLElement {
                         resolve({
                             type: 'text',
                             data: {
-                                descImage: '1',
+                                descImage: Math.floor(Math.random() * 100),
                                 image: '3'
                             }
                         })
@@ -334,13 +353,11 @@ class zRobotCalibration extends HTMLElement {
 
     proxyModeData() {
         const _this = this
+        // 给子组件的基本数据
         this.modeData = new Proxy({
-            text: {
-                descImage: '',
-                image: ''
-            },
-            rotate: {},
-            slide: {},
+            text: null,
+            rotate: null,
+            slide: null,
         }, {
             get(target, p, receiver) {
                 return target[p]
@@ -348,7 +365,7 @@ class zRobotCalibration extends HTMLElement {
             set(target, p, newValue, receiver) {
                 switch (_this.trigger) {
                     case 'block':
-                        _this.$blockModeSlot.lastChild.setAttribute('data', JSON.stringify(newValue))
+                        _this.$blockModeSlot.lastChild?.setAttribute('data', JSON.stringify(newValue))
                         break
                     case 'passive':
                         break
@@ -367,7 +384,8 @@ class zRobotCalibration extends HTMLElement {
                     case 'block':
                         switch (p) {
                             case 'mask':
-                                newValue ? _this.$blockModeSlot.classList.add('loading') : _this.$blockModeSlot.classList.remove('loading')
+                                _this.$blockModeChild.loadingMask.style.opacity = newValue ? '1' : '0'
+                                _this.$blockModeChild.loadingMask.style.zIndex = newValue ? '1' : '-1'
                                 break
                             case 'refresh':
                                 newValue ? _this.$blockModePanel.refresh.classList.add('loading') : _this.$blockModePanel.refresh.classList.remove('loading')
@@ -394,6 +412,23 @@ class zRobotCalibration extends HTMLElement {
                 return Reflect.set(...arguments)
             }
         })
+    }
+
+    toolFunc() {
+        return {
+            uniqueKey: () => {
+                let uuid = '', i, random
+                for (i = 0; i < 32; i++) {
+                    random = Math.random() * 16 | 0
+                    if (i === 8 || i === 12 || i === 16 || i === 20) {
+                        uuid += '-'
+                    }
+                    uuid += (i === 12 ? 4 : (i === 16 ? (random & 3 | 8) : random))
+                        .toString(16)
+                }
+                return uuid
+            }
+        }
     }
 }
 
