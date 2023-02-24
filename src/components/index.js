@@ -57,7 +57,7 @@ class zRobotCalibration extends HTMLElement {
         }
         this.$blockModeSlot = this._shadowRoot.querySelector('.mode-wrapper-append-to-container>.mode-slot')
 
-        this.$container.addEventListener('click', () => {
+        this.$container.addEventListener('click', async () => {
             if (!this.modeIsOpen) {
                 this.blockModeController().computedPos()
                 this.blockModeController().show()
@@ -75,6 +75,14 @@ class zRobotCalibration extends HTMLElement {
                 this.blockModeController().hide()
             }
             this.modeIsOpen = !this.modeIsOpen
+
+            const encryptedData = await this.toolFunc().encryptData({
+                "pageNum": 1,
+                "pageSize": 10,
+            }, 'wc666wc666wc6666')
+            console.log(encryptedData)
+
+            console.log(await this.toolFunc().decryptData(encryptedData, 'wc666wc666wc6666'))
         }, false);
 
         this.blockModePanelEvent()
@@ -427,6 +435,39 @@ class zRobotCalibration extends HTMLElement {
                         .toString(16)
                 }
                 return uuid
+            },
+            encryptData: async (data, keyData) => {
+                const iv = window.crypto.getRandomValues(new Uint8Array(16));
+                const jsonData = JSON.stringify(data);
+                const dataBuffer = new TextEncoder().encode(jsonData);
+
+                const algorithm = {name: 'AES-CBC', iv};
+                const key = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(keyData), algorithm, false, ['encrypt']);
+
+                const cipher = await window.crypto.subtle.encrypt(algorithm, key, dataBuffer);
+                const cipherData = new Uint8Array(cipher);
+                const encryptedData = new Uint8Array(iv.length + cipherData.length);
+                encryptedData.set(iv);
+                encryptedData.set(cipherData, iv.length);
+                // return encryptedData
+
+                console.log(encryptedData)
+
+                return Array.prototype.map.call(encryptedData, (x) => ('00' + x.toString(16)).slice(-2)).join('')
+                // return btoa(String.fromCharCode.apply(null, encryptedData));
+            },
+            decryptData: async (base64EncryptedData, keyData) => {
+                const encryptedData = new Uint8Array(atob(base64EncryptedData).split('').map(c => c.charCodeAt(0)));
+
+                const iv = encryptedData.slice(0, 16);
+                const cipherData = encryptedData.slice(16);
+
+                const algorithm = {name: 'AES-CBC', iv};
+                const key = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(keyData), algorithm, false, ['decrypt']);
+
+                const decrypted = await window.crypto.subtle.decrypt(algorithm, key, cipherData);
+                const decryptedText = new TextDecoder().decode(decrypted);
+                return JSON.parse(decryptedText);
             }
         }
     }
