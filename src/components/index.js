@@ -77,12 +77,9 @@ class zRobotCalibration extends HTMLElement {
             this.modeIsOpen = !this.modeIsOpen
 
             const encryptedData = await this.toolFunc().encryptData({
-                "pageNum": 1,
-                "pageSize": 10,
+                checkType: "text"
             }, 'wc666wc666wc6666')
             console.log(encryptedData)
-
-            console.log(await this.toolFunc().decryptData(encryptedData, 'wc666wc666wc6666'))
         }, false);
 
         this.blockModePanelEvent()
@@ -446,28 +443,22 @@ class zRobotCalibration extends HTMLElement {
 
                 const cipher = await window.crypto.subtle.encrypt(algorithm, key, dataBuffer);
                 const cipherData = new Uint8Array(cipher);
+                // 将向量和加密数据分开存储
                 const encryptedData = new Uint8Array(iv.length + cipherData.length);
                 encryptedData.set(iv);
                 encryptedData.set(cipherData, iv.length);
-                // return encryptedData
 
-                console.log(encryptedData)
-
-                return Array.prototype.map.call(encryptedData, (x) => ('00' + x.toString(16)).slice(-2)).join('')
-                // return btoa(String.fromCharCode.apply(null, encryptedData));
+                // 将加密数据编码为base64字符串
+                return this.toolFunc().arrayBufferToBase64(encryptedData.buffer);
             },
-            decryptData: async (base64EncryptedData, keyData) => {
-                const encryptedData = new Uint8Array(atob(base64EncryptedData).split('').map(c => c.charCodeAt(0)));
-
-                const iv = encryptedData.slice(0, 16);
-                const cipherData = encryptedData.slice(16);
-
-                const algorithm = {name: 'AES-CBC', iv};
-                const key = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(keyData), algorithm, false, ['decrypt']);
-
-                const decrypted = await window.crypto.subtle.decrypt(algorithm, key, cipherData);
-                const decryptedText = new TextDecoder().decode(decrypted);
-                return JSON.parse(decryptedText);
+            arrayBufferToBase64: (buffer) => {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(binary);
             }
         }
     }
