@@ -75,11 +75,6 @@ class zRobotCalibration extends HTMLElement {
                 this.blockModeController().hide()
             }
             this.modeIsOpen = !this.modeIsOpen
-
-            const encryptedData = await this.toolFunc().encryptData({
-                checkType: "text"
-            }, 'wc666wc666wc6666')
-            console.log(encryptedData)
         }, false);
 
         this.blockModePanelEvent()
@@ -327,21 +322,43 @@ class zRobotCalibration extends HTMLElement {
 
     networkFunc() {
         return {
-            getData: (refresh = false) => {
+            getData: async (refresh = false) => {
                 this.loadingFlag.mask = true
                 if (refresh) this.loadingFlag.refresh = true
+
+                const encryptedData = await this.toolFunc().encryptData({
+                    checkType: this.mode
+                }, 'wc666wc666wc6666')
+
+
                 return new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        resolve({
-                            type: 'text',
-                            data: {
-                                descImage: Math.floor(Math.random() * 100),
-                                image: '3'
+                    fetch('http://127.0.0.1:6789/getVerify', {
+                        method: 'POST',
+                        headers: {
+                            "Content-type": "application/json; charset=UTF-8",
+                            "uuid": this.Z_UUID,
+                        },
+                        body: JSON.stringify({
+                            input_data: encryptedData
+                        }),
+                    }).then(response => response.json())
+                        .then(res => {
+                            if (res.code === 200) {
+                                resolve({
+                                    type: 'text',
+                                    data: {
+                                        descImage: res.data,
+                                        image: '3'
+                                    }
+                                })
+                            } else {
+                                reject(res.msg)
                             }
+                        }).catch(err => reject(err))
+                        .finally(() => {
+                            this.loadingFlag.mask = false
+                            if (refresh) this.loadingFlag.refresh = false
                         })
-                        this.loadingFlag.mask = false
-                        if (refresh) this.loadingFlag.refresh = false
-                    }, 1000)
                 })
             },
             valid: () => {

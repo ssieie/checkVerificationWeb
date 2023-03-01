@@ -9,6 +9,8 @@ class zTextClickMode extends HTMLElement {
 
         this.$container = this._shadowRoot.querySelector('.text-container')
 
+        this.$preImg = this._shadowRoot.querySelector('.text-container>.tip>.desc-img')
+
         this.$canvas = this._shadowRoot.querySelector('.text-container>#textSelCanvas')
 
         this.proxyModeData()
@@ -137,7 +139,8 @@ class zTextClickMode extends HTMLElement {
     propertyChangeMonitor(name, oldVal, newVal) {
         switch (name) {
             case 'data':
-                console.log(JSON.parse(newVal))
+                const data = JSON.parse(newVal)
+                this.$preImg.style.backgroundImage = `url(data:image/jpg;base64,${data.descImage})`
                 this.pointArrs.value = [];
                 break
         }
